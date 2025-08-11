@@ -124,140 +124,8 @@
             font-family: "Microsoft JhengHei", Arial, sans-serif; /* 設定字體 */
             box-sizing: border-box;               /* 盒模型計算包含邊框和內邊距 */
 
-            padding-top: 23px;                       /* 為固定header預留空間 */
+            padding-top: 2px;                       /* 為固定header預留空間 */
 
-        }
-
-        /* 頁面標題樣式 - 已移除動畫效果以提升效能 */
-        h1 {
-            color: var(--text-color);             /* 使用主題文字色 */
-            font-size: 22px;                      /* 設定字體大小 */
-            margin-bottom: 0px;                   /* 移除底部邊距 */
-            border-bottom: 2px solid var(--accent-color); /* 底部邊框 */
-            padding: 0 24px 5px;                  /* 添加內邊距 */
-            /* 移除 position: relative 和 transition 以提升效能 */
-        }
-
-        /* 標題容器 - 添加獨立的z-index確保正確的層疊關係 */
-        /* 標題容器樣式 */
-        .header-container {
-            text-align: center;                   /* 文字居中 */
-            position: fixed;                      /* 固定定位 */
-            top: 0;                              /* 貼齊頂部 */
-            left: 0;                             /* 貼齊左側 */
-            right: 0;                            /* 貼齊右側 */
-            margin-bottom: 0px;                   /* 移除底部邊距 */
-            z-index: 1100;                       /* 設置更高層級 */
-            background-color: var(--primary-color); /* 添加背景色 */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加陰影 */
-            padding: 1px 0;                      /* 添加上下內邊距 */
-        }
-
-        /* 標題樣式 - 確保懸停效果不會影響按鈕 */
-        h1 {
-            color: var(--text-color);             /* 使用主題文字色 */
-            font-size: 22px;                      /* 設定字體大小 */
-            margin-bottom: 0px;                   /* 移除底部邊距 */
-            border-bottom: 2px solid var(--accent-color); /* 底部邊框 */
-            padding-bottom: 5px;                  /* 底部內邊距 */
-            position: relative;                   /* 相對定位 */
-            z-index: 1;                           /* 設置層級 */
-        }
-
-        /* 移除h1懸停時的變形效果，防止影響按鈕 */
-        h1:hover {
-            text-shadow: 0 2px 4px rgba(255, 156, 51, 0.3);
-        }
-
-        /* 標題下方橙色線條效果 - 已移除動畫以提升效能 */
-        h1::after {
-            display: none;
-        }
-
-        /* 簡化標題懸停效果 - 只保留文字陰影 */
-        h1:hover {
-            text-shadow: 0 2px 4px rgba(255, 156, 51, 0.3);
-        }
-
-        /* 標題按鈕樣式 */
-        .header-btn {
-            position: absolute;                   /* 絕對定位 */
-            top: 50%;                             /* 垂直置中 */
-            transform: translateY(-50%);          /* 精確垂直置中 */
-            background-color: transparent;        /* 透明背景 */
-            color: #666666;                       /* 設置文字顏色 */
-            border: none;                         /* 移除邊框 */
-            width: 20px;                          /* 設置寬度 */
-            height: 20px;                         /* 設置高度 */
-            font-size: 14px;                      /* 設置字體大小 */
-            display: flex;                        /* 使用flex佈局 */
-            align-items: center;                  /* 垂直居中 */
-            justify-content: center;              /* 水平居中 */
-            cursor: pointer;                      /* 設置游標樣式 */
-            z-index: 10;                          /* 確保按鈕在最上層 */
-            padding: 0;                           /* 移除內邊距 */
-            transition: color 0.2s ease;          /* 平滑過渡效果 */
-            outline: none;                        /* 移除點擊輪廓 */
-            
-            /* 禁止所有變形和動畫 */
-            transform: translateY(-50%) !important; /* 強制保持垂直居中 */
-            animation: none !important;            /* 禁止動畫 */
-            box-shadow: none !important;           /* 禁止陰影 */
-        }
-
-        /* 增加按鈕的可點擊區域 */
-        .header-btn::before {
-            content: '';
-            position: absolute;
-            top: -15px;
-            bottom: -15px;
-            left: -15px;
-            right: -15px;
-        }
-
-        /* 標題按鈕懸停效果 */
-        .header-btn:hover {
-            color: #999999;                       /* 懸停時改變顏色 */
-            /* 禁止任何位置或大小變化 */
-            transform: translateY(-50%) !important; /* 強制保持垂直居中 */
-        }
-
-        /* 標題按鈕點擊效果 */
-        .header-btn:active {
-            color: var(--button-orange);          /* 點擊時變為強調色 */
-            /* 禁止任何位置或大小變化 */
-            transform: translateY(-50%) !important; /* 強制保持垂直居中 */
-        }
-
-        /* 左右按鈕位置 */
-        .header-btn-left {
-            left: 5px;                           /* 左邊按鈕位置 */
-        }
-
-        .header-btn-right {
-            right: 5px;                          /* 右邊按鈕位置 */
-        }
-
-        /* 增加左右按鈕的可點擊區域不同程度 */
-        .header-btn-left::before {
-            left: -20px;                         /* 左側更大的可點擊區域 */
-        }
-
-        .header-btn-right::before {
-            right: -20px;                       /* 右側更大的可點擊區域 */
-        }
-
-        /* 清除可能影響按鈕的其他樣式規則 */
-        .header-btn * {
-            transition: none !important;          /* 禁止過渡效果 */
-            animation: none !important;           /* 禁止動畫 */
-            transform: none !important;           /* 禁止變形 */
-        }
-
-        /* 防止全局懸停效果影響按鈕 */
-        *:hover .header-btn {
-            transform: translateY(-50%) !important; /* 強制保持垂直居中 */
-            position: absolute !important;         /* 強制保持絕對定位 */
         }
 
         /* ============================================
@@ -1681,11 +1549,6 @@
 
 </head>
 <body class="has-rate-footer">
-
-	<div class="header-container">
-        <!-- 移除右側切換模式按鈕，只保留標題 -->
-        <h1>小朋友專用計算機</h1>
-    </div>
 	
     <div class="time-display-wrapper">
         <div id="timeDisplay" class="sticky-header">
