@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=400, user-scalable=no">
+    
+    <!-- PWA設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#333333">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- 快取控制 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>小朋友工具箱</title>
+
+    <style>
+        /* ============================================
+        * CSS 變數定義區域
+        * ============================================ */
+        :root {
+            /* 尺寸相關變數 */
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            
+            /* 間距尺寸 */
+            --spacing-xs: 2px;
+            --spacing-sm: 4px;
+            --spacing-md: 8px;
+            --spacing-lg: 15px;
+            
+            /* 字體大小 */
+            --font-size-xs: 12px;
+            --font-size-sm: 14px;
+            --font-size-md: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 22px;
+            
+            /* 動畫時間 */
+            --transition-fast: 0.2s;
+            --transition-normal: 0.3s;
+            
+            /* 陰影效果 */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ========== 主題色彩定義 ========== */
+        :root {
+            /* 基本色彩 */
+            --primary-color: #333333;
+            --secondary-color: #4a4a4a;
+            --text-color: #ffffff;
+            --text-muted: #999999;
+            --border-color: #555555;
+            --hover-color: #666666;
+            
+            /* 功能色彩 */
+            --accent-color: #ff9c33;
+            --accent-color-light: rgba(255, 156, 51, 0.2);
+            --accent-color-dark: #e88a22;
+            
+            /* 按鈕色彩 */
+            --button-primary: #ff9c33;
+            --button-secondary: #4a4a4a;
+        }
+
+        /* ============================================
+        * 基礎元素樣式
+        * ============================================ */
+        html, body {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            padding: 0 3px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            box-sizing: border-box;
+            height: 100vh;
+            padding-top: 0;
+        }
+
+        /* Header容器樣式 */
+        .header-container {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 60px;
+            background-color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        /* 標題樣式 */
+        .header-title {
+            color: var(--text-color);
+            font-size: var(--font-size-xl);
+            margin: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        /* 導航按鈕容器 */
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* 導航按鈕樣式 */
+        .nav-btn {
+            background-color: var(--button-secondary);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: 6px 12px;
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .nav-btn.active {
+            background-color: var(--accent-color);
+            color: #333333;
+        }
+
+        /* iframe容器樣式 */
+        .content-container {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: calc(100vh - 60px);
+            border: none;
+            overflow: hidden;
+        }
+
+        /* iframe樣式 */
+        .content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: var(--primary-color);
+        }
+
+        /* 載入中樣式 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            font-size: var(--font-size-md);
+        }
+    </style>
+</head>
+<body>
+    <!-- 固定Header -->
+    <div class="header-container">
+        <h1 class="header-title">小朋友</h1>
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="loadPage('calculator')">計算</button>
+            <button class="nav-btn" onclick="loadPage('check')">支票</button>
+            <button class="nav-btn" onclick="loadPage('invoice')">發票</button>
+            <button class="nav-btn" onclick="loadPage('gas')">加油</button>
+        </div>
+    </div>
+
+    <!-- 內容區域 -->
+    <div class="content-container">
+        <div class="loading" id="loading">載入中...</div>
+        <iframe id="contentFrame" class="content-frame" src="pages/calculator.html" style="display: none;"></iframe>
+    </div>
+
+    <script>
+        // 頁面載入功能
+        function loadPage(pageName) {
+            const frame = document.getElementById('contentFrame');
+            const loading = document.getElementById('loading');
+            const buttons = document.querySelectorAll('.nav-btn');
+            
+            // 更新按鈕狀態
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 顯示載入中
+            loading.style.display = 'block';
+            frame.style.display = 'none';
+            
+            // 載入頁面
+            frame.src = `pages/${pageName}.html`;
+            
+            // iframe載入完成後隱藏載入中
+            frame.onload = function() {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+        }
+
+        // 初始載入
+        document.addEventListener('DOMContentLoaded', function() {
+            const frame = document.getElementById('contentFrame');
+            const loading = document.getElementById('loading');
+            
+            frame.onload = function() {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+        });
+
+        // PWA安裝提示
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            deferredPrompt = e;
+        });
+
+        // Service Worker註冊
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
