@@ -1,0 +1,21 @@
+{
+  "version": "1.0.1",
+  "build": "20250811001",
+  "timestamp": "2025-08-11T00:00:00Z",
+  "description": "初始版本 - 加入智能快取更新機制",
+  "files": [
+    "/",
+    "/index.html",
+    "/manifest.json",
+    "/sw.js",
+    "/version.json",
+    "/pages/calculator.html",
+    "/pages/check.html",
+    "/pages/invoice.html",
+    "/pages/gas.html",
+    "/icons/icon-192.png",
+    "/icons/icon-512.png"
+  ],
+  "update_strategy": "cache_then_network_update",
+  "offline_support": true
+}
