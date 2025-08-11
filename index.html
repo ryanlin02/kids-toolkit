@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=400, user-scalable=no">
     
+    <!-- Google Analytics - 請將 G-XXXXXXXXXX 替換為您的測量 ID -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JJ2GGC2ZCY"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-JJ2GGC2ZCY');
+    </script>
+    
     <!-- PWA設定 -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#333333">
@@ -241,7 +252,6 @@
             background: #5a5a5a;
         }
 
-
         /* 滑入動畫 */
         @keyframes slideDown {
             from {
@@ -260,10 +270,10 @@
     <div class="header-container">
         <h1 class="header-title">小朋友</h1>
         <div class="nav-buttons">
-            <button class="nav-btn active" onclick="loadPage('calculator')">計算</button>
-            <button class="nav-btn" onclick="loadPage('check')">支票</button>
-            <button class="nav-btn" onclick="loadPage('invoice')">發票</button>
-            <button class="nav-btn" onclick="loadPage('gas')">加油</button>
+            <button class="nav-btn active" onclick="loadPage('calculator', event)">計算</button>
+            <button class="nav-btn" onclick="loadPage('check', event)">支票</button>
+            <button class="nav-btn" onclick="loadPage('invoice', event)">發票</button>
+            <button class="nav-btn" onclick="loadPage('gas', event)">加油</button>
         </div>
     </div>
 
@@ -283,17 +293,49 @@
         <iframe id="contentFrame" class="content-frame" src="pages/calculator.html" style="display: none;"></iframe>
     </div>
 
-
     <script>
-        // 頁面載入功能
-        function loadPage(pageName) {
+        // ========== Google Analytics 事件追蹤函數 ==========
+        function trackEvent(category, action, label = null, value = null) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', action, {
+                    'event_category': category,
+                    'event_label': label,
+                    'value': value
+                });
+                console.log(`GA Event: ${category} - ${action} - ${label}`);
+            }
+        }
+
+        // 追蹤頁面瀏覽時間
+        let pageStartTime = Date.now();
+        let currentPage = 'calculator';
+
+        // 追蹤頁面停留時間
+        function trackPageTime(pageName) {
+            const timeSpent = Math.round((Date.now() - pageStartTime) / 1000);
+            trackEvent('User Engagement', 'page_time_spent', pageName, timeSpent);
+            pageStartTime = Date.now();
+        }
+
+        // 頁面載入功能（修正版）
+        function loadPage(pageName, event) {
             const frame = document.getElementById('contentFrame');
             const loading = document.getElementById('loading');
             const buttons = document.querySelectorAll('.nav-btn');
             
+            // 追蹤上一頁的停留時間
+            if (currentPage && currentPage !== pageName) {
+                trackPageTime(currentPage);
+            }
+            
+            // 追蹤頁面切換事件
+            trackEvent('Navigation', 'page_switch', pageName);
+            
             // 更新按鈕狀態
             buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             
             // 顯示載入中
             loading.style.display = 'block';
@@ -301,11 +343,39 @@
             
             // 載入頁面
             frame.src = `pages/${pageName}.html`;
+            currentPage = pageName;
+            
+            // 追蹤虛擬頁面瀏覽
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'page_view', {
+                    page_title: `小朋友工具箱 - ${pageName}`,
+                    page_location: `https://ryanlin02.github.io/kids-toolkit/pages/${pageName}.html`,
+                    page_path: `/kids-toolkit/pages/${pageName}.html`
+                });
+            }
             
             // iframe載入完成後隱藏載入中
             frame.onload = function() {
                 loading.style.display = 'none';
                 frame.style.display = 'block';
+                trackEvent('Performance', 'page_load_complete', pageName);
+                
+                // 嘗試與iframe內容通信（追蹤內部操作）
+                try {
+                    frame.contentWindow.postMessage({
+                        type: 'GA_TRACKING',
+                        trackingId: 'G-JJ2GGC2ZCY' // 替換為您的追蹤ID
+                    }, '*');
+                } catch (e) {
+                    console.log('無法與iframe通信:', e);
+                }
+            };
+            
+            // 載入錯誤處理
+            frame.onerror = function() {
+                loading.style.display = 'none';
+                trackEvent('Error', 'page_load_failed', pageName);
+                alert('頁面載入失敗，請重試');
             };
         }
 
@@ -314,16 +384,46 @@
             const frame = document.getElementById('contentFrame');
             const loading = document.getElementById('loading');
             
+            // 追蹤初始頁面載入
+            trackEvent('Session', 'app_start', 'initial_load');
+            
             frame.onload = function() {
                 loading.style.display = 'none';
                 frame.style.display = 'block';
+                trackEvent('Performance', 'initial_load_complete');
             };
+            
+            // 追蹤用戶基本資訊
+            trackUserInfo();
         });
+
+        // 追蹤用戶設備資訊
+        function trackUserInfo() {
+            // 設備類型
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            trackEvent('User Info', 'device_type', isMobile ? 'mobile' : 'desktop');
+            
+            // 螢幕解析度
+            trackEvent('User Info', 'screen_resolution', `${window.screen.width}x${window.screen.height}`);
+            
+            // 瀏覽器語言
+            trackEvent('User Info', 'browser_language', navigator.language);
+            
+            // 是否為PWA模式
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+            trackEvent('User Info', 'is_pwa', isPWA ? 'yes' : 'no');
+        }
 
         // PWA安裝提示
         let deferredPrompt;
         window.addEventListener('beforeinstallprompt', (e) => {
             deferredPrompt = e;
+            trackEvent('PWA', 'install_prompt_shown');
+        });
+
+        // 追蹤PWA安裝
+        window.addEventListener('appinstalled', (evt) => {
+            trackEvent('PWA', 'app_installed');
         });
 
         // ========== 版本更新管理 ==========
@@ -340,9 +440,11 @@
                         swRegistration = registration;
                         setupUpdateHandling();
                         loadVersionInfo();
+                        trackEvent('ServiceWorker', 'registration_success');
                     })
                     .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
+                        trackEvent('ServiceWorker', 'registration_failed', registrationError.message);
                     });
             });
         }
@@ -356,13 +458,14 @@
                 if (data.type === 'UPDATE_AVAILABLE') {
                     console.log('發現新版本:', data.newVersion);
                     showUpdateNotification(data.currentVersion, data.newVersion);
+                    trackEvent('Update', 'update_available', data.newVersion?.version);
                 }
                 
                 if (data.type === 'CACHE_UPDATED') {
                     console.log('快取已更新:', data.version);
                     currentVersion = data.version;
                     hideUpdateNotification();
-                    // 頁面將會重新載入
+                    trackEvent('Update', 'cache_updated', data.version);
                 }
             });
 
@@ -374,25 +477,29 @@
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                             console.log('檢測到Service Worker更新');
                             showUpdateNotification(null, null, '檢測到應用程式更新');
+                            trackEvent('ServiceWorker', 'update_detected');
                         }
                     });
                 });
             }
         }
 
-        // 載入版本資訊
+        // 載入版本資訊（修正路徑）
         async function loadVersionInfo() {
             try {
-                const response = await fetch('/version.json', { 
+                // 修正：使用相對路徑
+                const response = await fetch('version.json', { 
                     cache: 'no-cache',
                     headers: { 'Cache-Control': 'no-cache' }
                 });
                 if (response.ok) {
                     currentVersion = await response.json();
                     console.log('當前版本:', currentVersion.version);
+                    trackEvent('Version', 'current_version', currentVersion.version);
                 }
             } catch (error) {
                 console.error('無法載入版本資訊:', error);
+                trackEvent('Error', 'version_load_failed', error.message);
             }
         }
 
@@ -414,6 +521,7 @@
             
             notification.classList.add('show');
             updateAvailable = true;
+            trackEvent('Update', 'notification_shown');
         }
 
         // 隱藏更新通知
@@ -426,6 +534,7 @@
         // 關閉更新提示
         function dismissUpdate() {
             hideUpdateNotification();
+            trackEvent('Update', 'update_dismissed');
             // 10分鐘後再次檢查
             setTimeout(() => {
                 if (navigator.serviceWorker.controller) {
@@ -438,6 +547,7 @@
         async function updateApp() {
             try {
                 console.log('正在更新應用程式...');
+                trackEvent('Update', 'update_started');
                 
                 // 發送強制更新訊息給Service Worker
                 if (navigator.serviceWorker.controller) {
@@ -446,23 +556,54 @@
                 
                 // 等待一下後重新載入頁面
                 setTimeout(() => {
+                    trackEvent('Update', 'update_reload');
                     window.location.reload(true);
                 }, 2000);
                 
             } catch (error) {
                 console.error('更新失敗:', error);
+                trackEvent('Update', 'update_failed', error.message);
                 alert('更新失敗，請手動重新整理頁面');
             }
         }
 
-
         // 頁面可見性變化時檢查更新
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && navigator.serviceWorker.controller) {
-                // 頁面重新變為可見時檢查更新
-                setTimeout(() => {
-                    navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
-                }, 1000);
+            if (!document.hidden) {
+                trackEvent('Session', 'page_visible');
+                if (navigator.serviceWorker.controller) {
+                    // 頁面重新變為可見時檢查更新
+                    setTimeout(() => {
+                        navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
+                    }, 1000);
+                }
+            } else {
+                // 追蹤頁面停留時間
+                trackPageTime(currentPage);
+                trackEvent('Session', 'page_hidden');
+            }
+        });
+
+        // 追蹤頁面離開
+        window.addEventListener('beforeunload', () => {
+            trackPageTime(currentPage);
+            trackEvent('Session', 'app_close');
+        });
+
+        // 追蹤錯誤
+        window.addEventListener('error', (e) => {
+            trackEvent('Error', 'javascript_error', `${e.message} at ${e.filename}:${e.lineno}:${e.colno}`);
+        });
+
+        // 追蹤未處理的Promise錯誤
+        window.addEventListener('unhandledrejection', (e) => {
+            trackEvent('Error', 'promise_rejection', e.reason);
+        });
+
+        // 監聽來自iframe的訊息（如果子頁面需要追蹤）
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'GA_EVENT') {
+                trackEvent(e.data.category, e.data.action, e.data.label, e.data.value);
             }
         });
     </script>
