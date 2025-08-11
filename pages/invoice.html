@@ -1,77 +1,2173 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=400, user-scalable=no">
-    <title>發票功能</title>
-    
+    <title>小朋友開發票</title>
+
     <style>
-        :root {
-            --primary-color: #333333;
-            --secondary-color: #4a4a4a;
-            --text-color: #ffffff;
-            --accent-color: #ff9c33;
-            --border-radius-md: 8px;
-            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    :root {
+        --primary-color: #333333;
+        --secondary-color: #4a4a4a;
+        --text-color: #ffffff;
+        --border-color: #555555;
+        --hover-color: #666666;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --button-orange: #ff9c33;
+        --button-blue: #33b5e5;
+    }
+    
+    html, body {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+        position: relative; /* 添加这行 */
+        overflow-x: hidden; /* 添加这行 */
+        -webkit-text-size-adjust: 100%; /* 添加这行 */
+        padding: 0 3px;
+        background-color: #333333;
+        color: var(--text-color);
+        font-family: "Microsoft JhengHei", Arial, sans-serif;
+        box-sizing: border-box;
+    }
+    
+    .row {
+        margin: 4px 0;
+        display: flex;
+        align-items: center;
+        background: var(--secondary-color);
+        padding: 3px; /* 修改这里，从6px改为3px */
+        border-radius: 4px; /* 修改这里，从8px改为4px */
+        box-shadow: 0 4px 8px var(--shadow-color);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        transform-origin: left;
+        will-change: transform;
+    }
+    
+    .row:hover {
+        transform: translateX(5px);
+        box-shadow: 0 6px 12px var(--shadow-color);
+    }
+    
+    .row:hover::before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: 50%;
+        width: 3px;
+        height: 0;
+        background: var(--button-orange);
+        animation: expandHeight 0.3s forwards;
+    }
+    
+    @keyframes expandHeight {
+        to {
+            height: 100%;
+            top: 0;
         }
+    }
+    
+    .label {
+        width: 120px;
+        margin-right: 15px;
+        text-align: right;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+    
+    input {
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 0;
+        background-color: #222222;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+        touch-action: manipulation;
+        height: 36px;
+        text-align: right;
+    }
+    
+    input:focus {
+        outline: none;
+        border-color: var(--button-orange);
+        box-shadow: 0 0 0 3px rgba(255, 156, 51, 0.2);
+        transform: scale(1.02);
+    }
+    
+    .result {
+        width: 100%;
+        padding: 6px 8px;
+        margin-bottom: 0;
+        background-color: #222222;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 16px;
+        position: relative;
+        overflow: hidden;
+        box-sizing: border-box;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        text-align: right;
+    }
 
-        html, body {
-            width: 100%;
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 0 3px;
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            font-family: "Microsoft JhengHei", Arial, sans-serif;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    /* 使"未稅"和"稅金"输入框不显示线条 */
+    /* 使"未稅"、"稅金"和"中文"输入框不显示线条 */
+    /* 移除所有輸入框的線條動畫 */
+    .result::before {
+        display: none;
+    }
 
-        .construction-container {
-            text-align: center;
-            background: var(--secondary-color);
-            padding: 40px 20px;
-            border-radius: var(--border-radius-md);
-            box-shadow: var(--shadow-md);
-            border: 2px solid var(--accent-color);
-        }
+    .result::after {
+        content: attr(data-placeholder);
+        opacity: 0.5;
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        transform: translateY(-50%);
+        color: #888888;
+        font-size: 16px; /* 從 14px 修改為 16px */
+        white-space: nowrap;
+        pointer-events: none;
+    }
 
-        .construction-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
-            color: var(--accent-color);
-        }
+    .result:not(:empty)::after {
+        display: none;
+    }
 
-        .construction-title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--accent-color);
-        }
+    /* 專門為 financialResult 添加的樣式 */
+    /* 只保留 financialResult 上方線條動畫，移除其他特效 */
+    #financialResult {
+        padding: 6px 8px;
+        background-color: #222222;
+        border: 2px solid var(--border-color);
+        font-size: 21px;
+        height: auto;
+        min-height: 42px;
+        max-height: 76px;
+        overflow-y: auto;
+        overflow-x: auto;
+        white-space: normal;
+        word-wrap: break-word;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-family: monospace;
+        box-sizing: border-box;
+        display: block;
+        text-align: right;
+        line-height: 1.2;
+        
+        /* 重要：移除所有動畫和過渡效果 */
+        transition: none;
+        animation: none;
+        transform: none !important;
+    }
+    
+    .container, .keyboard-container {
+        background-color: var(--secondary-color);
+        border-radius: 10px;
+        padding: 10px;
+        margin: 4px 0; /* 修改这里，统一使用4px边距 */
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: visible;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .keyboard-container {
+        padding: 12px 10px;
+    }
+    
+    .container:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+    }
+    
+    .result-group-horizontal {
+        display: flex;
+        align-items: center;
+        margin-bottom: 4px; /* 修改这里，从6px改为4px */
+        width: 100%;
+    }
+    
+    .result-group-horizontal label {
+        width: 60px;
+        margin-right: 0px;
+        margin-bottom: 0;
+        text-align: right;
+        padding-right: 5px;
+        font-weight: bold;
+        color: var(--button-orange);
+        flex-shrink: 0;
+    }
 
-        .construction-message {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: var(--text-color);
-        }
+    .result-group-horizontal label:empty {
+        width: 0;
+        padding-right: 0;
+        margin-right: 0;
+    }
+    
+    .calculator-keyboard {
+        width: 100%;
+        margin: 4px 0;
+        touch-action: manipulation;
+        padding: 0; /* 移除左右内边距 */
+    }
+    
+    .keyboard-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px; /* 修改这里，从8px改为4px */
+    }
+    
+    /* 1. 修改按鍵高度 */
+    .calc-btn {
+        flex: 1;
+        margin: 0 5px;
+        padding: 8px 5px; /* 減少內邊距 */
+        font-size: 24px;
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        border: 2px solid var(--border-color); /* 增加邊框寬度 */
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        will-change: transform, opacity;
+        backface-visibility: hidden;
+        transform: translateZ(0);
+        touch-action: manipulation;
+        height: 50px; /* 降低按鍵高度 */
+        min-height: 45px; /* 確保最小高度 */
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3); /* 增強陰影效果 */
+    }
 
-        .construction-subtitle {
-            font-size: 14px;
-            color: #999999;
-            margin-top: 20px;
-        }
+    /* 為active狀態添加特定樣式 */
+    .calc-btn.active {
+        transform: scale(0.95) translateY(1px);
+    }
+    
+    .number-btn {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 修改數字按鍵的點擊效果 */
+    .number-btn:active {
+        background-color: var(--button-orange);
+        color: white;
+    }
+
+    .number-btn:active .arabic-number,
+    .number-btn:active .financial-char {
+        color: white; /* 確保在橘色背景下文字顯示為白色 */
+    }
+    
+    .arabic-number {
+        font-size: 28px;
+        margin-right: 8px;
+    }
+    
+    .financial-char {
+        font-size: 24px;
+        color: var(--button-orange);
+    }
+    
+    .clear-btn, .backspace-btn {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 20px;
+    }
+
+    .backspace-btn.active {
+        background-color: var(--button-orange);
+        color: white;
+    }
+    
+    .calc-btn:hover {
+        background-color: var(--button-orange);
+        color: var(--text-color);
+        border-color: var(--button-orange);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .calc-btn:active {
+        transform: scale(0.95) translateY(1px);
+        transition: transform 0.1s, background-color 0.1s;
+        color: white;
+    }
+    
+    .calc-btn::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+        transition: width 0.3s ease-out, height 0.3s ease-out;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+    }
+    
+    .calc-btn:active::after {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .clear-btn {
+        background-color: var(--secondary-color); /* 與其他按鈕相同的背景色 */
+        color: var(--button-blue); /* 藍色文字 */
+        border: 1px solid var(--button-blue); /* 藍色邊框 */
+    }
+    
+    .clear-btn:active {
+        /* 添加新樣式 */
+        background-color: var(--button-blue); /* 點擊時變為藍色背景 */
+        color: white; /* 點擊時文字變白色 */
+    }
+
+    .clear-btn:hover {
+        background-color: rgba(51, 181, 229, 0.2); /* 淡藍色背景 */
+        border-color: var(--button-blue);
+        color: white;
+    }
+    
+    .divider-flow {
+        position: relative;
+        height: 2px;
+        background: linear-gradient(90deg, 
+            var(--secondary-color) 0%,
+            var(--button-orange) 50%,
+            var(--secondary-color) 100%);
+        margin: 4px 0; /* 修改这里，从8px改为4px */
+        overflow: hidden;
+    }
+    
+    .divider-flow::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 156, 51, 0.8),
+            transparent);
+        animation: flowLight 3s ease-in-out infinite;
+    }
+    
+    @keyframes flowLight {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(200%); }
+    }
+    
+    .footer-message {
+        background-color: #333333;
+        color: var(--text-color);
+        padding: 8px;
+        text-align: center;
+        margin-top: 4px; /* 修改这里，从8px改为4px */
+        border-radius: 4px;
+        transform: scale(1.05);
+        text-shadow: 0 0 10px var(--button-orange);
+        transition: all 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .content-wrapper {
+        width: 100%;
+        padding: 3px 0; /* 移除左右内边距，只保留上下内边距 */
+        box-sizing: border-box;
+        overflow: visible;
+    }
+
+    /* 時間顯示容器包裝 */
+    .time-display-wrapper {
+        position: relative;
+        height: auto;
+        margin: 3px 0;
+        z-index: 1000;
+    }
+
+    /* 固定頂部的時間顯示區域 */
+    .sticky-header {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0;
+        background: var(--secondary-color);
+        padding: 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        animation: fadeIn 0.8s ease-out;
+        transition: all 0.3s ease;
+        z-index: 999;
+        width: calc(100% - 16px);
+        margin: 0 auto;
+    }
+
+    /* 固定狀態的樣式 */
+    .sticky-header.is-sticky {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        border-radius: 0 0 4px 4px;
+    }
+
+    /* 時間顯示區域樣式 */
+    #timeDisplay {
+        margin: 3px 0;
+        font-size: 15px;
+        background: var(--secondary-color);
+        color: var(--text-color);
+        padding: 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        animation: fadeIn 0.8s ease-out;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #timeDisplay:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 12px var(--shadow-color);
+    }
+
+    #timeDisplay::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--button-orange), transparent);
+        animation: timelineSlide 3s linear infinite;
+    }
+
+    .time-label {
+        font-weight: bold;
+        margin-right: 10px;
+        color: var(--button-orange);
+    }
+
+    /* 發票歷史記錄相關樣式 */
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        margin: 4px 0;
+        padding: 0; /* 移除左右内边距 */
+        width: 100%; /* 确保宽度100% */
+        box-sizing: border-box; /* 确保边框计算在宽度内 */
+    }
+
+    .action-btn {
+        flex: 1; /* 保持均等分配空间 */
+        margin: 0 2px; /* 减小按钮间的间距 */
+        padding: 12px 0; /* 移除左右内边距，只保留上下内边距 */
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center; /* 确保文本居中 */
+        white-space: nowrap; /* 防止文本折行 */
+        overflow: hidden; /* 防止文本溢出 */
+        text-overflow: ellipsis; /* 文本溢出时显示省略号 */
+    }
+
+    .action-btn:hover {
+        background-color: var(--button-orange);
+        border-color: var(--button-orange);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:active {
+        transform: scale(0.95);
+    }
+
+    .action-btn:first-child {
+        margin-left: 0; /* 第一个按钮左边距为0 */
+    }
+
+    .action-btn:last-child {
+        margin-right: 0; /* 最后一个按钮右边距为0 */
+    }
+
+    /* 歷史面板樣式 */
+    .history-panel {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9); /* 稍微增加背景透明度 */
+        z-index: 1000;
+        overflow-y: auto;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 15px; /* 減少頂部內邊距 */
+        background-color: var(--primary-color);
+        position: sticky;
+        top: 0;
+        z-index: 1001;
+        border-bottom: 2px solid var(--button-orange);
+    }
+
+    /* 新增這些樣式 */
+    .header-left {
+        flex: 1;
+    }
+
+    .header-right {
+        margin-right: 20px; /* 增加與關閉按鈕的距離 */
+    }
+
+    .history-header h2 {
+        margin: 0;
+        color: var(--button-orange);
+        font-size: 20px;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-radius: 50%;
+        margin-left: 10px;
+        background-color: rgba(255, 255, 255, 0.1); /* 添加背景色使按鈕更明顯 */
+    }
+
+    .close-btn:hover {
+        color: var(--button-orange);
+        transform: scale(1.1);
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .history-content {
+        padding: 10px; /* 減少內邊距 */
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* 減少項目間隔 */
+    }
+
+    /* 修改歷史項目樣式 */
+    .history-item {
+        background-color: var(--secondary-color);
+        padding: 8px 10px; /* 減少內邊距 */
+        border-radius: 8px; /* 稍微減少圓角 */
+        position: relative;
+        transition: all 0.3s ease;
+        border-left: 3px solid var(--button-orange);
+        display: grid;
+        grid-template-columns: 1fr auto; /* 採用網格布局 */
+        grid-template-areas: 
+            "date actions"
+            "amount amount"
+            "details details"
+            "financial financial"; /* 新增大寫區域 */
+        gap: 4px; /* 減少間距 */
+    }
+
+    .history-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .history-date {
+        font-weight: bold;
+        color: var(--button-orange);
+        font-size: 14px; /* 減小字體大小 */
+        margin-bottom: 2px; /* 減少底部邊距 */
+        grid-area: date;
+    }
+
+    .history-amount {
+        font-size: 16px; /* 減小字體大小 */
+        margin-bottom: 4px; /* 減少底部邊距 */
+        grid-area: amount;
+    }
+
+    .history-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 修改為兩列等寬 */
+        font-size: 13px; /* 減小字體大小 */
+        color: #cccccc;
+        margin-bottom: 4px; /* 減少底部邊距 */
+        grid-area: details;
+    }
+
+    /* 新增大寫金額樣式 */
+    .history-financial {
+        font-size: 15px; /* 較大的字體 */
+        color: #e8e8e8; /* 較亮的顏色 */
+        font-weight: 500; /* 稍微加粗 */
+        margin-bottom: 6px; /* 底部邊距 */
+        grid-area: financial;
+        border-top: 1px dashed var(--border-color); /* 頂部分隔線 */
+        padding-top: 4px; /* 頂部內邊距 */
+    }
+
+    .history-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px; /* 減少按鍵間距 */
+        grid-area: actions;
+        align-self: start; /* 置頂對齊 */
+    }
+
+    .delete-btn, .detail-btn {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        padding: 3px 8px; /* 減小內邊距 */
+        cursor: pointer;
+        font-size: 12px; /* 減小字體大小 */
+        transition: all 0.3s ease;
+    }
+
+    .delete-btn {
+        border-color: #e74c3c;
+        color: #e74c3c;
+    }
+
+    .delete-btn:hover {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .detail-btn {
+        border-color: var(--button-blue);
+        color: var(--button-blue);
+    }
+
+    .detail-btn:hover {
+        background-color: var(--button-blue);
+        color: white;
+    }
+
+    .no-data {
+        text-align: center;
+        color: #cccccc;
+        font-style: italic;
+        padding: 20px 0;
+    }
+
+    .detail-item {
+        margin-bottom: 8px;
+        display: flex;
+        flex-direction: column;
+        word-break: break-all;
+    }
+
+    .detail-item span {
+        font-weight: bold;
+        color: var(--button-orange);
+        margin-right: 5px;
+    }
+
+    .delete-all-btn {
+        background: none;
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+        font-size: 13px; /* 減小字體大小 */
+        padding: 4px 12px; /* 增加左右內邊距 */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .delete-all-btn:hover {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    /* 模態框樣式 */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .modal-container {
+        background-color: var(--primary-color);
+        border-radius: 10px;
+        width: 90%;
+        max-width: 350px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.3s ease-out;
+        overflow: hidden;
+    }
+
+    @keyframes modalSlideIn {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--secondary-color);
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        color: var(--button-orange);
+        font-size: 18px;
+    }
+
+    .modal-content {
+        padding: 20px 15px;
+        color: var(--text-color);
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        padding: 10px 15px 15px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        border-top: 1px solid var(--border-color);
+        background-color: var(--secondary-color);
+    }
+
+    .modal-btn {
+        padding: 8px 15px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .modal-btn-primary {
+        background-color: var(--button-orange);
+        color: white;
+    }
+
+    .modal-btn-primary:hover {
+        background-color: #e88a22;
+        transform: translateY(-2px);
+    }
+
+    .modal-btn-secondary {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+    }
+
+    .modal-btn-secondary:hover {
+        background-color: var(--hover-color);
+        transform: translateY(-2px);
+    }
+
+    /* 鍵盤切換容器樣式 */
+    .keyboard-switch-container {
+        margin: 4px 0; 
+        padding: 0; /* 移除左右内边距 */
+        width: 100%; /* 确保宽度100% */
+        box-sizing: border-box; /* 确保边框计算在宽度内 */
+    }
+
+    .keyboard-switch {
+        display: flex;
+        justify-content: space-between;
+        background-color: var(--secondary-color);
+        border-radius: 10px;
+        padding: 4px; /* 減少內邊距 */
+        box-shadow: 0 3px 6px var(--shadow-color); /* 略微調整陰影 */
+        overflow: hidden;
+    }
+
+    .switch-btn {
+        flex: 1;
+        background-color: transparent;
+        color: var(--text-color);
+        border: none;
+        padding: 6px 0; /* 將上下內邊距從 10px 減少到 6px */
+        margin: 0 2px;
+        border-radius: 8px;
+        font-size: 15px; /* 略微減小字體大小 */
+        font-weight: bold;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        height: 32px; /* 明確設定按鍵高度 */
+        line-height: 1; /* 確保文字垂直居中 */
+    }
+
+    .switch-btn.active {
+        background-color: var(--button-orange);
+        color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2); /* 減小陰影 */
+    }
+
+    .switch-btn:hover:not(.active) {
+        background-color: var(--hover-color);
+    }
+
+    /* 計算機顯示區域樣式 */
+    .calculator-display {
+        background-color: #222222;
+        border-radius: 8px;
+        margin-bottom: 4px; /* 修改这里，从8px改为4px */
+        padding: 8px 15px; /* 減少上下內邊距 */
+        text-align: right;
+        min-height: 28px; /* 減少最小高度 */
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        overflow-x: auto;
+        white-space: nowrap;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        border: 2px solid var(--border-color); /* 增加邊框寬度 */
+    }
+
+    #calculator-expression {
+        font-size: 28px;
+        color: var(--text-color);
+        font-family: monospace;
+    }
+
+    /* 計算機按鈕樣式 */
+    .calc-number-btn {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 確保計算機數字按鍵也能顯示橘色的大寫數字 */
+    .calc-number-btn .financial-char {
+        font-size: 20px; /* 略微降低大寫數字的字體大小 */
+        color: var(--button-orange);
+    }
+
+    .calc-number-btn .arabic-number {
+        font-size: 24px; /* 略微降低阿拉伯數字的字體大小 */
+        margin-right: 8px;
+    }
+
+    /* 當點擊計算機數字按鍵時，確保大寫數字也變為白色 */
+    .calc-number-btn:active .arabic-number,
+    .calc-number-btn:active .financial-char {
+        color: white; /* 確保在橘色背景下文字顯示為白色 */
+    }
+
+    .calc-number-btn:active {
+        background-color: var(--button-orange);
+        color: white;
+    }
+
+    .operator-btn {
+        font-weight: bold;
+    }
+
+    .special-operator {
+        color: var(--button-orange);
+    }
+
+    .special-operator:active {
+        background-color: rgba(255, 156, 51, 0.2);
+    }
+
+    .calc-equals {
+        background-color: var(--button-orange);
+        color: white;
+    }
+
+    .calc-equals:hover {
+        background-color: #e88a22;
+    }
+
+    /* 修改按鈕的樣式使其能容納計算機特殊字符 */
+    .calc-btn {
+        height: 50px; /* 進一步降低高度 */
+        min-height: 45px; /* 確保有最小高度 */
+        border: 2px solid var(--border-color); /* 增加邊框寬度 */
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3); /* 增強陰影效果 */
+    }
+
+    .food-animation-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 150%; /* 進一步增加容器寬度 */
+        height: 100%;
+        pointer-events: none;
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: visible; /* 關鍵：允許內容溢出 */
+        margin-left: -25%; /* 調整位置確保在視窗中央 */
+    }
+
+    .food-text {
+        position: absolute;
+        font-family: "Microsoft JhengHei", Arial, sans-serif;
+        font-weight: bold;
+        color: var(--button-orange);
+        font-size: 0;
+        text-shadow: 0 0 25px rgba(255, 156, 51, 0.9); /* 增強文字陰影 */
+        opacity: 0;
+        transform: translateY(50px);
+        transition: opacity 0.5s, transform 0.5s, font-size 0.5s;
+        text-align: center; /* 確保文字居中 */
+        width: 100%; /* 使用容器的全寬 */
+        left: 0; /* 重置左偏移 */
+    }
+
+    .food-text.show {
+        opacity: 1;
+        transform: translateY(0);
+        font-size: 300px; /* 再增加字體大小 */
+        animation: pulse 0.5s ease-in-out;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.5); opacity: 0; }
+        50% { transform: scale(3.0); opacity: 1; } /* 調整放大效果 */
+        100% { transform: scale(1.0); opacity: 1; }
+    }
+
+    .food-text.hide {
+        opacity: 0;
+        transform: translateY(-50px);
+        transition: opacity 0.2s, transform 0.2s;
+    }
+
+    /* 添加在 style 標籤內的最後 */
+    .financial-digit {
+        color: #FFBE7A; /* 較淺的橘色，更接近白色 */
+        display: inline; /* 確保是行內元素 */
+    }
+
+    /* 添加限制位數的提示樣式 */
+    .limit-notification {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        background-color: rgba(51, 51, 51, 0.95);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        text-align: center;
+        transition: transform 0.3s ease-out;
+        border: 2px solid var(--button-orange);
+        max-width: 80%;
+    }
+
+    .limit-notification.show {
+        transform: translate(-50%, -50%) scale(1);
+        animation: pulse-effect 0.5s ease-out;
+    }
+
+    .limit-notification .icon {
+        font-size: 40px;
+        color: var(--button-orange);
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .limit-notification .message {
+        font-size: 18px;
+        margin-bottom: 15px;
+    }
+
+    @keyframes pulse-effect {
+        0% { transform: translate(-50%, -50%) scale(0.95); }
+        50% { transform: translate(-50%, -50%) scale(1.05); }
+        100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
     </style>
 </head>
 <body>
-    <div class="construction-container">
-        <div class="construction-icon">🧾</div>
-        <h1 class="construction-title">發票功能</h1>
-        <p class="construction-message">網頁架設中</p>
-        <p class="construction-subtitle">敬請期待...</p>
+    <div class="time-display-wrapper">
+        <div id="timeDisplay" class="sticky-header">
+            <div style="display: flex; justify-content: center; width: 100%;">
+                <span class="time-label">現在時間</span>
+                <span id="currentTime"></span>
+            </div>
+        </div>
     </div>
+    
+    <div class="container">
+        <div class="content-wrapper">
+            <div class="result-group-horizontal">
+                <label style="color: var(--button-orange); font-weight: bold;">總金額</label>
+                <input type="tel" id="arabicNumber" placeholder="請輸入金額" oninput="updateResults()" inputmode="numeric" autocomplete="off">
+            </div>
+            
+            <div class="result-group-horizontal">
+                <label>未稅</label>
+                <div class="result" id="preTaxAmount"></div>
+            </div>
+            
+            <div class="result-group-horizontal">
+                <label>稅金</label>
+                <div class="result" id="taxAmount"></div>
+            </div>
+            
+            <div class="result-group-horizontal">
+                <label>中文</label>
+                <div class="result" id="traditionalResult" data-placeholder="這裡會顯示轉換後的中文數字"></div>
+            </div>
+            
+            <div class="result-group-horizontal">
+                <label></label>
+                <div class="result" id="financialResult" data-placeholder="這裡會顯示轉換後的國字大寫"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 在 keyboard-container 之前添加鍵盤切換按鈕 -->
+    <div class="keyboard-switch-container">
+        <div class="keyboard-switch">
+            <button id="direct-input-btn" class="switch-btn active">直接輸入</button>
+            <button id="calculator-btn" class="switch-btn">計算機</button>
+        </div>
+    </div>
+
+    <!-- 原始的數字鍵盤（直接輸入模式） -->
+    <div id="direct-input-keyboard" class="keyboard-container">
+        <div class="calculator-keyboard">
+            <div class="keyboard-row">
+                <button class="calc-btn number-btn" onclick="appendNumber(7)">
+                    <div class="arabic-number">7</div>
+                    <div class="financial-char">柒</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(8)">
+                    <div class="arabic-number">8</div>
+                    <div class="financial-char">捌</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(9)">
+                    <div class="arabic-number">9</div>
+                    <div class="financial-char">玖</div>
+                </button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn number-btn" onclick="appendNumber(4)">
+                    <div class="arabic-number">4</div>
+                    <div class="financial-char">肆</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(5)">
+                    <div class="arabic-number">5</div>
+                    <div class="financial-char">伍</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(6)">
+                    <div class="arabic-number">6</div>
+                    <div class="financial-char">陸</div>
+                </button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn number-btn" onclick="appendNumber(1)">
+                    <div class="arabic-number">1</div>
+                    <div class="financial-char">壹</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(2)">
+                    <div class="arabic-number">2</div>
+                    <div class="financial-char">貳</div>
+                </button>
+                <button class="calc-btn number-btn" onclick="appendNumber(3)">
+                    <div class="arabic-number">3</div>
+                    <div class="financial-char">參</div>
+                </button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn clear-btn" onclick="clearInput()">清除</button>
+                <button class="calc-btn number-btn" onclick="appendNumber(0)">
+                    <div class="arabic-number">0</div>
+                    <div class="financial-char">零/拾</div>
+                </button>
+                <button class="calc-btn backspace-btn" onclick="backspace()">退回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增的計算機鍵盤（計算機模式） -->
+    <div id="calculator-keyboard" class="keyboard-container" style="display: none;">
+        <div class="calculator-display">
+            <div id="calculator-expression">0</div>
+        </div>
+        <div class="calculator-keyboard">
+            <div class="keyboard-row">
+                <button class="calc-btn operator-btn" onclick="calcClear()">C</button>
+                <button class="calc-btn operator-btn special-operator" onclick="calcTaxAddition()" style="font-size: 20px;">稅外加</button>
+                <button class="calc-btn operator-btn special-operator" onclick="showFoodAnimation()" style="color: #FF5050;">❤</button>
+                <button class="calc-btn operator-btn special-operator" onclick="calcAddOperator('/')">/</button>
+            </div>
+            <div class="keyboard-row">
+                <!-- 第一行：7, 8, 9 -->
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(7)">
+                    <div class="arabic-number">7</div>
+                    <div class="financial-char">柒</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(8)">
+                    <div class="arabic-number">8</div>
+                    <div class="financial-char">捌</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(9)">
+                    <div class="arabic-number">9</div>
+                    <div class="financial-char">玖</div>
+                </button>
+                <button class="calc-btn operator-btn special-operator" onclick="calcAddOperator('*')">×</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(4)">
+                    <div class="arabic-number">4</div>
+                    <div class="financial-char">肆</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(5)">
+                    <div class="arabic-number">5</div>
+                    <div class="financial-char">伍</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(6)">
+                    <div class="arabic-number">6</div>
+                    <div class="financial-char">陸</div>
+                </button>
+                <button class="calc-btn operator-btn special-operator" onclick="calcAddOperator('-')">－</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(1)">
+                    <div class="arabic-number">1</div>
+                    <div class="financial-char">壹</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(2)">
+                    <div class="arabic-number">2</div>
+                    <div class="financial-char">貳</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(3)">
+                    <div class="arabic-number">3</div>
+                    <div class="financial-char">參</div>
+                </button>
+                <button class="calc-btn operator-btn special-operator" onclick="calcAddOperator('+')">＋</button>
+            </div>
+            <div class="keyboard-row">
+                <button class="calc-btn backspace-btn" onclick="calcBackspace()">退回</button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber(0)">
+                    <div class="arabic-number">0</div>
+                    <div class="financial-char">零</div>
+                </button>
+                <button class="calc-btn calc-number-btn" onclick="calcAddNumber('.')">.</button>
+                <button class="calc-btn operator-btn calc-equals" onclick="calcEvaluate()">＝</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加在 divider-flow 之前 -->
+    <div class="action-buttons">
+        <button class="action-btn" id="saveInvoice" onclick="saveInvoiceData()">保存發票</button>
+        <button class="action-btn" id="viewHistory" onclick="toggleHistoryPanel()">歷史記錄</button>
+    </div>
+
+    <!-- 添加歷史記錄面板 -->
+    <div id="historyPanel" class="history-panel">
+        <div class="history-header">
+            <div class="header-left">
+                <h2>發票歷史記錄</h2>
+            </div>
+            <div class="header-right">
+                <button class="delete-all-btn" onclick="confirmDeleteAll()">全部刪除</button>
+            </div>
+            <button class="close-btn" onclick="toggleHistoryPanel()">×</button>
+        </div>
+        <div id="historyContent" class="history-content"></div>
+    </div>
+
+    <div class="divider-flow"></div>
+    
+    <div class="footer-message">開完發票記得要吃碗雞肉飯唷！</div>
+
+    <div style="height: 20px;"></div>  <!-- 添加一個高度為 20px 的空 div -->
+
+    <script>
+
+        // 追蹤查看歷史記錄
+        function toggleHistoryPanel() {
+        const panel = document.getElementById('historyPanel');
+        if (panel.style.display === 'block') {
+            panel.style.display = 'none';
+        } else {
+            panel.style.display = 'block';
+            loadHistoryData();
+        }
+        }
+
+        // 添加更新時間的函數
+        // 修改後的代碼
+        function updateTime() {
+            const now = new Date();
+            const days = ['日', '一', '二', '三', '四', '五', '六'];
+            
+            // 調整為台北時間 (GMT+8)
+            const taipeiTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+            
+            const westernYear = taipeiTime.getUTCFullYear();
+            // 計算民國年 (西元年 - 1911)
+            const rocYear = westernYear - 1911;
+            const month = String(taipeiTime.getUTCMonth() + 1).padStart(2, '0');
+            const date = String(taipeiTime.getUTCDate()).padStart(2, '0');
+            const day = days[taipeiTime.getUTCDay()];
+            const hours = String(taipeiTime.getUTCHours()).padStart(2, '0');
+            const minutes = String(taipeiTime.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(taipeiTime.getUTCSeconds()).padStart(2, '0');
+            
+            const timeString = `民國${rocYear}年${month}月${date}日 星期${day} ${hours}:${minutes}:${seconds}`;
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 每秒更新一次時間
+        setInterval(updateTime, 1000);
+        updateTime(); // 初始化顯示
+
+        // 添加捲動時的固定頂部效果（已移除 h1 相關判斷）
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.sticky-header');
+            
+            if (!header) return;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                
+                // 簡化判斷邏輯，只根據捲動位置決定是否固定
+                if (scrollTop > header.offsetTop) {
+                    header.classList.add('is-sticky');
+                } else {
+                    header.classList.remove('is-sticky');
+                }
+            });
+        });
+
+        // 轉換阿拉伯數字並同時更新結果
+        function updateResults() {
+            const arabicNumber = document.getElementById('arabicNumber').value.trim();
+            
+            // 清空結果，如果沒有輸入
+            if (!arabicNumber) {
+                document.getElementById('traditionalResult').textContent = '';
+                document.getElementById('financialResult').textContent = '';
+                document.getElementById('preTaxAmount').textContent = '';
+                document.getElementById('taxAmount').textContent = '';
+                return;
+            }
+            
+            try {
+                // 檢查輸入是否為有效的正整數
+                if (!/^\d+$/.test(arabicNumber)) {
+                    document.getElementById('traditionalResult').textContent = '請輸入正整數';
+                    document.getElementById('financialResult').textContent = '請輸入正整數';
+                    document.getElementById('preTaxAmount').textContent = '';
+                    document.getElementById('taxAmount').textContent = '';
+                    return;
+                }
+
+                // 檢查是否超過9位數
+                if (arabicNumber.length > 9) {
+                    document.getElementById('traditionalResult').textContent = '數值過大';
+                    document.getElementById('financialResult').textContent = '發票金額不能超過9位數';
+                    document.getElementById('preTaxAmount').textContent = '';
+                    document.getElementById('taxAmount').textContent = '';
+                    return;
+                }
+                
+                // 計算未稅金額和稅金
+                const totalAmount = parseInt(arabicNumber);
+                const preTaxAmount = Math.round(totalAmount / 1.05);
+                const taxAmount = totalAmount - preTaxAmount;
+                
+                // 更新稅務相關欄位
+                document.getElementById('preTaxAmount').textContent = preTaxAmount;
+                document.getElementById('taxAmount').textContent = taxAmount;
+                
+                // 轉換為繁體中文並更新
+                const traditionalResult = arabicToChineseNumber(arabicNumber, 'traditional') + ' 元整';
+                document.getElementById('traditionalResult').textContent = traditionalResult;
+                
+                // 轉換為大寫金額並更新
+                const financialResult = arabicToChineseNumber(arabicNumber, 'financial') + ' 圓整';
+                document.getElementById('financialResult').innerHTML = financialResult; // 使用 innerHTML 而不是 textContent
+                
+                // 添加觸覺反饋（如果設備支持）
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(50);
+                }
+            } catch (error) {
+                document.getElementById('traditionalResult').textContent = '轉換錯誤: ' + error.message;
+                document.getElementById('financialResult').textContent = '轉換錯誤: ' + error.message;
+                document.getElementById('preTaxAmount').textContent = '';
+                document.getElementById('taxAmount').textContent = '';
+            }
+        }
+        
+        // 修改 arabicToChineseNumber 函數中處理零的邏輯
+        function arabicToChineseNumber(num, format) {
+            // 分割整數和小數部分
+            const parts = num.split('.');
+            const integerPart = parts[0];
+            const decimalPart = parts.length > 1 ? parts[1] : '';
+            
+            // 根據格式選擇對應的字符
+            let digits, units;
+            if (format === 'traditional') {
+                digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+                units = ['', '十', '百', '千', '萬', '十', '百', '千', '億', '十', '百', '千', '兆'];
+            } else if (format === 'financial') {
+                digits = ['零', '壹', '貳', '參', '肆', '伍', '陸', '柒', '捌', '玖'];
+                units = ['', '拾', '佰', '仟', '萬', '拾', '佰', '仟', '億', '拾', '佰', '仟', '兆'];
+            }
+            
+            // 處理整數部分
+            let intResult = '';
+            if (integerPart === '0') {
+                intResult = format === 'financial' ? '<span class="financial-digit">零</span>' : digits[0];
+            } else {
+                const len = integerPart.length;
+                
+                // 特殊處理10-19的數字
+                if (format !== 'financial' && len === 2 && integerPart.charAt(0) === '1') {
+                    intResult = units[1];
+                    if (integerPart.charAt(1) !== '0') {
+                        intResult += digits[parseInt(integerPart.charAt(1))];
+                    }
+                } else {
+                    // 新增變量來追蹤上一個處理過的字符是否為零，以及是否已經添加了單位
+                    let lastWasZero = false;
+                    let hasAddedUnit = false;
+                    
+                    for (let i = 0; i < len; i++) {
+                        const digit = parseInt(integerPart.charAt(i));
+                        const pos = len - i - 1;
+                        
+                        if (digit !== 0) {
+                            // 非零數字直接轉換並加上單位
+                            lastWasZero = false;
+                            hasAddedUnit = false;
+                            
+                            // 在 financial 格式中為數字添加特殊標籤
+                            if (format === 'financial') {
+                                intResult += `<span class="financial-digit">${digits[digit]}</span>${units[pos]}`;
+                            } else {
+                                intResult += digits[digit] + units[pos];
+                            }
+                        } else {
+                            // 處理零的特殊規則
+                            if (pos === 4 || pos === 8) {
+                                // 萬位或億位的零，需要加上對應的單位，但不需要加上"零"字
+                                if (intResult.length > 0) {
+                                    // 確保沒有連續加入同一單位
+                                    if (!intResult.endsWith(units[4]) && !intResult.endsWith(units[8])) {
+                                        intResult += units[pos];
+                                        hasAddedUnit = true;
+                                    }
+                                }
+                            } else if (i < len - 1 && integerPart.charAt(i + 1) !== '0' && !lastWasZero) {
+                                // 當前數字是0，下一個不是0，且上一個不是0，加上零
+                                if (format === 'financial') {
+                                    intResult += `<span class="financial-digit">${digits[0]}</span>`;
+                                } else {
+                                    intResult += digits[0];
+                                }
+                                lastWasZero = true;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 處理小數部分
+            let decResult = '';
+            if (decimalPart) {
+                decResult = '點';
+                for (let i = 0; i < decimalPart.length; i++) {
+                    if (format === 'financial') {
+                        decResult += `<span class="financial-digit">${digits[parseInt(decimalPart.charAt(i))]}</span>`;
+                    } else {
+                        decResult += digits[parseInt(decimalPart.charAt(i))];
+                    }
+                }
+            }
+            
+            // 組合結果
+            return intResult + decResult;
+        }
+        
+        // 添加數字到輸入框
+        function appendNumber(num) {
+            const inputField = document.getElementById('arabicNumber');
+            const currentValue = inputField.value;
+            
+            // 檢查是否已達到9位數限制
+            if (currentValue.length >= 9) {
+                // 顯示限制提示
+                showLimitNotification();
+                
+                // 給予觸覺反饋（如果設備支持）
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate([50, 30, 50]); // 錯誤震動模式
+                }
+                return;
+            }
+            
+            // 只允許輸入正整數
+            if (!isNaN(num)) {
+                inputField.value += num;
+                updateResults();
+                
+                // 給予觸覺反饋（如果設備支持）
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(50);
+                }
+            }
+        }
+        
+        // 清除輸入框內容
+        function clearInput() {
+            document.getElementById('arabicNumber').value = '';
+            updateResults();
+            
+            // 給予觸覺反饋（如果設備支持）
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate([50, 50, 50]);
+            }
+        }
+        
+        // 刪除最後一個輸入的數字
+        function backspace() {
+            const inputField = document.getElementById('arabicNumber');
+            inputField.value = inputField.value.slice(0, -1);
+            updateResults();
+            
+            // 給予觸覺反饋（如果設備支持）
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(70);
+            }
+        }
+        
+        // 頁面載入時執行
+        window.onload = function() {
+            // 初始化結果顯示
+            updateResults();
+            
+            // 自動聚焦到輸入框但不顯示虛擬鍵盤
+            document.getElementById('arabicNumber').focus();
+            document.getElementById('arabicNumber').blur();
+        };
+
+        function showIOSInstallGuide() {
+            const iosPrompt = document.createElement('div');
+            iosPrompt.id = 'ios-install-prompt';
+            iosPrompt.style.position = 'fixed';
+            iosPrompt.style.bottom = '20px';
+            iosPrompt.style.left = '50%';
+            iosPrompt.style.transform = 'translateX(-50%)';
+            iosPrompt.style.width = '90%';
+            iosPrompt.style.maxWidth = '400px';
+            iosPrompt.style.backgroundColor = '#ff9c33';
+            iosPrompt.style.color = 'white';
+            iosPrompt.style.padding = '10px 15px';
+            iosPrompt.style.borderRadius = '8px';
+            iosPrompt.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            iosPrompt.style.zIndex = '9999';
+            
+            iosPrompt.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="flex: 1;">
+                        <p style="margin: 5px 0;">新增到主畫面以便離線使用</p>
+                        <p style="margin: 5px 0; font-size: 12px;">點擊分享圖標，然後選擇「新增至主畫面」</p>
+                    </div>
+                    <button id="ios-close" style="background: none; border: none; color: white; font-size: 18px; padding: 5px;">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(iosPrompt);
+            
+            document.getElementById('ios-close').addEventListener('click', function() {
+                iosPrompt.style.display = 'none';
+                localStorage.setItem('installPromptDismissed', Date.now().toString());
+            });
+        }
+
+        // 添加到現有的JavaScript代碼中
+        document.addEventListener('DOMContentLoaded', function() {
+            const buttons = document.querySelectorAll('.calc-btn');
+            
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.classList.add('active');
+                });
+                
+                button.addEventListener('touchend', function() {
+                    this.classList.remove('active');
+                });
+                
+                // 添加過渡結束監聽器，確保過渡效果完成後恢復原始狀態
+                button.addEventListener('transitionend', function(e) {
+                    if (e.propertyName === 'background-color') {
+                        this.style.backgroundColor = '';
+                        this.style.color = '';
+                    }
+                });
+            });
+        });
+
+        // 保存發票資訊
+        function saveInvoiceData() {
+            const totalAmount = document.getElementById('arabicNumber').value.trim();
+            if (!totalAmount) {
+                showToast('請先輸入金額!');
+                return;
+            }
+            
+            const invoiceDate = new Date();
+            const year = invoiceDate.getFullYear();
+            const month = String(invoiceDate.getMonth() + 1).padStart(2, '0');
+            const date = String(invoiceDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${date}`;
+            
+            const invoiceData = {
+                id: new Date().getTime(),
+                date: formattedDate,
+                totalAmount: totalAmount,
+                preTaxAmount: document.getElementById('preTaxAmount').textContent,
+                taxAmount: document.getElementById('taxAmount').textContent,
+                traditionalAmount: document.getElementById('traditionalResult').textContent,
+                financialAmount: document.getElementById('financialResult').textContent,
+                timestamp: new Date().toISOString()
+            };
+            
+            // 獲取已存儲的發票記錄
+            let invoiceHistory = JSON.parse(localStorage.getItem('invoiceHistory') || '[]');
+            invoiceHistory.push(invoiceData);
+            
+            // 保存到 localStorage
+            localStorage.setItem('invoiceHistory', JSON.stringify(invoiceHistory));
+            
+            // 使用 showToast 替代 showModal
+            showToast('發票資訊已保存!');
+            
+        }
+
+        // 顯示/隱藏歷史記錄面板
+        function toggleHistoryPanel() {
+            const panel = document.getElementById('historyPanel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+                loadHistoryData();
+            }
+        }
+
+        // 載入歷史記錄
+        function loadHistoryData() {
+            const historyContent = document.getElementById('historyContent');
+            const invoiceHistory = JSON.parse(localStorage.getItem('invoiceHistory') || '[]');
+            
+            if (invoiceHistory.length === 0) {
+                historyContent.innerHTML = '<p class="no-data">尚無發票記錄</p>';
+                return;
+            }
+            
+            // 按日期排序，最新的在前面
+            invoiceHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            let html = '<div class="history-list">';
+            invoiceHistory.forEach(invoice => {
+                html += `
+                    <div class="history-item">
+                        <div class="history-date">${formatDate(invoice.date)}</div>
+                        <div class="history-amount">總金額: ${invoice.totalAmount}</div>
+                        <div class="history-details">
+                            <div>未稅: ${invoice.preTaxAmount}</div>
+                            <div>稅金: ${invoice.taxAmount}</div>
+                        </div>
+                        <div class="history-financial">大寫: ${invoice.financialAmount}</div>
+                        <div class="history-actions">
+                            <button class="detail-btn" onclick="loadInvoiceToForm(${invoice.id})">查看</button>
+                            <button class="delete-btn" onclick="deleteInvoice(${invoice.id})">刪除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            historyContent.innerHTML = html;
+        }
+
+        // 格式化日期顯示
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}/${month}/${day}`;
+        }
+
+        // 顯示發票詳情
+        function showInvoiceDetail(id) {
+            const invoiceHistory = JSON.parse(localStorage.getItem('invoiceHistory') || '[]');
+            const invoice = invoiceHistory.find(item => item.id === id);
+            
+            if (invoice) {
+                const detailContent = `
+                    <div class="detail-item"><span>日期</span> ${formatDate(invoice.date)}</div>
+                    <div class="detail-item"><span>總金額</span> ${invoice.totalAmount}</div>
+                    <div class="detail-item"><span>未稅金額</span> ${invoice.preTaxAmount}</div>
+                    <div class="detail-item"><span>稅金</span> ${invoice.taxAmount}</div>
+                    <div class="detail-item"><span>中文大寫</span> ${invoice.traditionalAmount}</div>
+                    <div class="detail-item"><span>財務大寫</span> ${invoice.financialAmount}</div>
+                `;
+                
+                showModal('發票詳情', detailContent);
+            }
+        }
+
+        // 刪除發票記錄 (不需確認)
+        function deleteInvoice(id) {
+            let invoiceHistory = JSON.parse(localStorage.getItem('invoiceHistory') || '[]');
+            invoiceHistory = invoiceHistory.filter(invoice => invoice.id !== id);
+            localStorage.setItem('invoiceHistory', JSON.stringify(invoiceHistory));
+            loadHistoryData(); // 重新載入歷史記錄
+            showToast('發票記錄已刪除!');
+        }
+
+        // 確認是否刪除所有發票記錄
+        function confirmDeleteAll() {
+            showConfirmModal('確認刪除', '確定要刪除所有發票記錄嗎？此操作無法撤銷。', deleteAllInvoices);
+        }
+
+        // 刪除所有發票記錄
+        function deleteAllInvoices() {
+            localStorage.removeItem('invoiceHistory');
+            loadHistoryData(); // 重新載入歷史記錄（會顯示無記錄）
+            showToast('所有發票記錄已刪除!');
+        }
+
+        // 顯示確認模態框
+        function showConfirmModal(title, content, confirmCallback) {
+            document.getElementById('confirmModalTitle').textContent = title || '確認';
+            document.getElementById('confirmModalContent').innerHTML = content;
+            document.getElementById('confirmModalOverlay').style.display = 'flex';
+            
+            // 設定確認按鈕點擊事件
+            const confirmButton = document.getElementById('confirmModalOk');
+            
+            // 移除舊的事件監聽器（如果有的話）
+            const newConfirmButton = confirmButton.cloneNode(true);
+            confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+            
+            // 添加新的事件監聽器
+            newConfirmButton.addEventListener('click', function() {
+                hideConfirmModal();
+                if (typeof confirmCallback === 'function') {
+                    confirmCallback();
+                }
+            });
+            
+            // 添加背景點擊關閉功能
+            document.getElementById('confirmModalOverlay').onclick = function(event) {
+                if (event.target === this) {
+                    hideConfirmModal();
+                }
+            };
+        }
+
+        // 隱藏確認模態框
+        function hideConfirmModal() {
+            document.getElementById('confirmModalOverlay').style.display = 'none';
+        }
+
+        // 顯示一般模態框
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title || '提示';
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('modalOverlay').style.display = 'flex';
+            
+            // 添加背景點擊關閉功能
+            document.getElementById('modalOverlay').onclick = function(event) {
+                if (event.target === this) {
+                    hideModal();
+                }
+            };
+        }
+
+        // 隱藏一般模態框
+        function hideModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+        }
+
+        // 修改 loadInvoiceToForm 函數
+        function loadInvoiceToForm(id) {
+            const invoiceHistory = JSON.parse(localStorage.getItem('invoiceHistory') || '[]');
+            const invoice = invoiceHistory.find(item => item.id === id);
+            
+            if (invoice) {
+                // 填充輸入框
+                document.getElementById('arabicNumber').value = invoice.totalAmount;
+                
+                // 更新所有計算結果
+                updateResults();
+                
+                // 隱藏歷史面板
+                document.getElementById('historyPanel').style.display = 'none';
+                
+                // 可選的提示 (用一個小的提示代替模態框)
+                showToast('已載入發票資料');
+            }
+        }
+
+        // 新增一個輕量級的提示函數
+        function showToast(message) {
+            // 創建一個輕量級的提示元素
+            const toast = document.createElement('div');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '60px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.backgroundColor = 'rgba(51, 181, 229, 0.9)';
+            toast.style.color = 'white';
+            toast.style.padding = '10px 20px';
+            toast.style.borderRadius = '5px';
+            toast.style.zIndex = '9999';
+            toast.style.fontWeight = 'bold';
+            toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 2秒後自動消失
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 500);
+            }, 800);
+        }
+
+        // 顯示位數限制提示
+        function showLimitNotification() {
+            // 檢查是否已存在提示
+            let notification = document.querySelector('.limit-notification');
+            
+            if (!notification) {
+                // 創建提示元素
+                notification = document.createElement('div');
+                notification.className = 'limit-notification';
+                
+                // 添加內容
+                notification.innerHTML = `
+                    <span class="icon">⚠️</span>
+                    <div class="message">發票金額別亂開！</div>
+                    <div>會被查稅喔！</div>
+                `;
+                
+                // 添加到頁面
+                document.body.appendChild(notification);
+                
+                // 自動在2秒後移除
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 2000);
+            }
+            
+            // 顯示提示
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+        }
+
+        // 鍵盤切換相關程式碼
+        document.addEventListener('DOMContentLoaded', function() {
+            // 獲取切換按鈕和兩種鍵盤元素
+            const directInputBtn = document.getElementById('direct-input-btn');
+            const calculatorBtn = document.getElementById('calculator-btn');
+            const directInputKeyboard = document.getElementById('direct-input-keyboard');
+            const calculatorKeyboard = document.getElementById('calculator-keyboard');
+            
+            // 切換至直接輸入模式
+            directInputBtn.addEventListener('click', function() {
+                directInputBtn.classList.add('active');
+                calculatorBtn.classList.remove('active');
+                directInputKeyboard.style.display = 'block';
+                calculatorKeyboard.style.display = 'none';
+            });
+            
+            // 切換至計算機模式
+            calculatorBtn.addEventListener('click', function() {
+                calculatorBtn.classList.add('active');
+                directInputBtn.classList.remove('active');
+                calculatorKeyboard.style.display = 'block';
+                directInputKeyboard.style.display = 'none';
+            });
+        });
+
+        // 計算機功能相關程式碼
+        let calculatorExpression = '0';
+        let lastResult = null;
+
+        // 更新計算機顯示
+        function updateCalculatorDisplay() {
+            document.getElementById('calculator-expression').textContent = calculatorExpression;
+        }
+
+        // 添加數字到計算機表達式
+        function calcAddNumber(num) {
+            // 如果顯示為0或上一次已經計算結果，則開始新的表達式
+            if (calculatorExpression === '0' || lastResult !== null) {
+                calculatorExpression = num.toString();
+                lastResult = null;
+            } else {
+                calculatorExpression += num.toString();
+            }
+            updateCalculatorDisplay();
+            
+            // 觸覺反饋
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(50);
+            }
+        }
+
+        // 添加運算符到計算機表達式
+        function calcAddOperator(operator) {
+            // 如果有上一次結果，使用該結果繼續計算
+            if (lastResult !== null) {
+                calculatorExpression = lastResult + operator;
+                lastResult = null;
+            } else {
+                // 防止連續輸入運算符
+                const lastChar = calculatorExpression[calculatorExpression.length - 1];
+                if (['+', '-', '*', '/'].includes(lastChar)) {
+                    calculatorExpression = calculatorExpression.slice(0, -1) + operator;
+                } else {
+                    calculatorExpression += operator;
+                }
+            }
+            updateCalculatorDisplay();
+            
+            // 觸覺反饋
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(70);
+            }
+        }
+
+        // 稅外加功能 - 將當前值乘以1.05
+        function calcTaxAddition() {
+            try {
+                // 如果有上一次結果，使用該結果進行計算
+                if (lastResult !== null) {
+                    const value = parseFloat(lastResult);
+                    const result = value * 1.05;
+                    // 四捨五入到小數點後兩位
+                    calculatorExpression = (Math.round(result * 100) / 100).toString();
+                } else {
+                    // 嘗試計算當前表達式的值
+                    try {
+                        // 確保表達式是數學表達式
+                        const sanitizedExpression = calculatorExpression.replace(/[^0-9+\-*/().]/g, '');
+                        
+                        // 如果表達式有效則計算
+                        if (sanitizedExpression) {
+                            const value = eval(sanitizedExpression);
+                            const result = value * 1.05;
+                            // 四捨五入到小數點後兩位
+                            calculatorExpression = (Math.round(result * 100) / 100).toString();
+                        } else {
+                            // 如果表達式為空或無效，從0開始
+                            calculatorExpression = "0";
+                        }
+                    } catch (error) {
+                        // 如果計算失敗，直接使用當前值
+                        const value = parseFloat(calculatorExpression) || 0;
+                        const result = value * 1.05;
+                        calculatorExpression = (Math.round(result * 100) / 100).toString();
+                    }
+                }
+                
+                lastResult = null;
+                updateCalculatorDisplay();
+                
+                // 將結果自動填入總金額輸入框並更新轉換結果
+                const inputField = document.getElementById('arabicNumber');
+                // 只取整數部分填入發票金額
+                const calculatedValue = parseFloat(calculatorExpression);
+                const integerResult = Math.floor(calculatedValue);
+                inputField.value = integerResult.toString();
+                updateResults(); // 更新其他顯示欄位
+                
+                // 觸覺反饋
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(70);
+                }
+            } catch (error) {
+                // 處理可能的錯誤
+                console.error('稅外加計算錯誤:', error);
+                calculatorExpression = '錯誤';
+                updateCalculatorDisplay();
+                
+                // 在一秒後重置顯示
+                setTimeout(() => {
+                    calculatorExpression = '0';
+                    updateCalculatorDisplay();
+                }, 1000);
+            }
+        }
+
+        // 清除計算機表達式
+        function calcClear() {
+            calculatorExpression = '0';
+            lastResult = null;
+            updateCalculatorDisplay();
+            
+            // 觸覺反饋
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate([50, 50, 50]);
+            }
+        }
+
+        // 刪除計算機表達式的最後一個字符
+        function calcBackspace() {
+            if (lastResult !== null) {
+                // 如果有上一次結果，清除並開始新的計算
+                calculatorExpression = '0';
+                lastResult = null;
+            } else if (calculatorExpression.length <= 1) {
+                calculatorExpression = '0';
+            } else {
+                calculatorExpression = calculatorExpression.slice(0, -1);
+            }
+            updateCalculatorDisplay();
+            
+            // 觸覺反饋
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(70);
+            }
+        }
+
+        // 計算表達式結果
+        function calcEvaluate() {
+            try {
+                // 確保表達式是數學表達式
+                const sanitizedExpression = calculatorExpression.replace(/[^0-9+\-*/().]/g, '');
+                
+                // 計算結果
+                const result = eval(sanitizedExpression);
+                
+                // 處理小數點，保留兩位小數
+                const roundedResult = Math.round(result * 100) / 100;
+                
+                // 更新顯示
+                calculatorExpression = roundedResult.toString();
+                lastResult = calculatorExpression;
+                updateCalculatorDisplay();
+                
+                // 將結果自動填入總金額輸入框並更新轉換結果
+                const inputField = document.getElementById('arabicNumber');
+                // 只取整數部分填入發票金額
+                const integerResult = Math.floor(roundedResult);
+                inputField.value = integerResult.toString();
+
+                // 檢查結果是否超過9位數
+                if (integerResult.toString().length > 9) {
+                    // 顯示限制提示
+                    showLimitNotification();
+                    // 設置為最大9位數
+                    inputField.value = "999999999";
+                } else {
+                    inputField.value = integerResult.toString();
+                }
+
+                updateResults();
+                
+                // 觸覺反饋
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate([50, 100, 50]);
+                }
+                
+                // 顯示提示，表示計算結果已填入
+                //showToast(`計算結果 ${integerResult} 已自動填入`);
+                
+            } catch (error) {
+                // 計算錯誤處理
+                calculatorExpression = '錯誤';
+                lastResult = null;
+                updateCalculatorDisplay();
+                
+                // 在一秒後重置顯示
+                setTimeout(() => {
+                    calculatorExpression = '0';
+                    updateCalculatorDisplay();
+                }, 1000);
+                
+                // 觸覺反饋表示錯誤
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate([100, 50, 100]);
+                }
+            }
+        }
+
+        // 儲存可以播放的文字
+        const foodTexts = ['雞', '肉', '飯', '真', '好', '吃'];
+        let animationInProgress = false;
+
+        // 顯示食物動畫
+        function showFoodAnimation() {
+            // 如果正在播放動畫，直接返回
+            if (animationInProgress) return;
+            
+            // 設置動畫進行中標記
+            animationInProgress = true;
+            
+            // 創建動畫容器
+            const container = document.createElement('div');
+            container.className = 'food-animation-container';
+            document.body.appendChild(container);
+            
+            // 觸覺反饋 - 長震動
+            if (window.navigator && window.navigator.vibrate) {
+                window.navigator.vibrate(100);
+            }
+            
+            // 依序顯示文字
+            let index = 0;
+            const showNextText = () => {
+                if (index >= foodTexts.length) {
+                    // 動畫結束，移除容器
+                    setTimeout(() => {
+                        document.body.removeChild(container);
+                        animationInProgress = false;
+                    }, 200); 
+                    return;
+                }
+                
+                // 創建文字元素
+                const textElement = document.createElement('div');
+                textElement.className = 'food-text';
+                textElement.textContent = foodTexts[index];
+                container.appendChild(textElement);
+                
+                // 觸發震動
+                if (window.navigator && window.navigator.vibrate) {
+                    window.navigator.vibrate(50);
+                }
+                
+                // 顯示動畫
+                setTimeout(() => {
+                    textElement.classList.add('show');
+                    
+                    // 淡出動畫
+                    setTimeout(() => {
+                        textElement.classList.add('hide');
+                        textElement.classList.remove('show');
+                        
+                        // 移除元素
+                        setTimeout(() => {
+                            if (textElement.parentNode === container) {
+                                container.removeChild(textElement);
+                            }
+                            index++;
+                            showNextText();
+                        }, 250);
+                    }, 500); 
+                }, 40);
+            };
+            
+            // 開始動畫
+            showNextText();
+        }
+
+        // 在頁面載入時初始化計算機顯示
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCalculatorDisplay();
+        });
+
+    </script>
+
+    <!-- 普通提示模態框 -->
+    <div id="modalOverlay" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="modalTitle">提示</h3>
+                <button class="close-btn" onclick="hideModal()">×</button>
+            </div>
+            <div id="modalContent" class="modal-content"></div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-primary" onclick="hideModal()">確定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 確認模態框 -->
+    <div id="confirmModalOverlay" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 id="confirmModalTitle">確認</h3>
+                <button class="close-btn" onclick="hideConfirmModal()">×</button>
+            </div>
+            <div id="confirmModalContent" class="modal-content"></div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="hideConfirmModal()">取消</button>
+                <button id="confirmModalOk" class="modal-btn modal-btn-primary">確定</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
