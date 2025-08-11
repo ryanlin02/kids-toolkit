@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=400, user-scalable=no">
+    
+    <!-- PWA設定 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#333333">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- 快取控制 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <title>小朋友工具箱</title>
+
+    <style>
+        /* ============================================
+        * CSS 變數定義區域
+        * ============================================ */
+        :root {
+            /* 尺寸相關變數 */
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            
+            /* 間距尺寸 */
+            --spacing-xs: 2px;
+            --spacing-sm: 4px;
+            --spacing-md: 8px;
+            --spacing-lg: 15px;
+            
+            /* 字體大小 */
+            --font-size-xs: 12px;
+            --font-size-sm: 14px;
+            --font-size-md: 16px;
+            --font-size-lg: 18px;
+            --font-size-xl: 22px;
+            
+            /* 動畫時間 */
+            --transition-fast: 0.2s;
+            --transition-normal: 0.3s;
+            
+            /* 陰影效果 */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ========== 主題色彩定義 ========== */
+        :root {
+            /* 基本色彩 */
+            --primary-color: #333333;
+            --secondary-color: #4a4a4a;
+            --text-color: #ffffff;
+            --text-muted: #999999;
+            --border-color: #555555;
+            --hover-color: #666666;
+            
+            /* 功能色彩 */
+            --accent-color: #ff9c33;
+            --accent-color-light: rgba(255, 156, 51, 0.2);
+            --accent-color-dark: #e88a22;
+            
+            /* 按鈕色彩 */
+            --button-primary: #ff9c33;
+            --button-secondary: #4a4a4a;
+        }
+
+        /* ============================================
+        * 基礎元素樣式
+        * ============================================ */
+        html, body {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            padding: 0 3px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            box-sizing: border-box;
+            height: 100vh;
+            padding-top: 0;
+        }
+
+        /* Header容器樣式 */
+        .header-container {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: 60px;
+            background-color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+
+        /* 標題樣式 */
+        .header-title {
+            color: var(--text-color);
+            font-size: var(--font-size-xl);
+            margin: 0;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 5px;
+            flex-shrink: 0;
+        }
+
+        /* 導航按鈕容器 */
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* 導航按鈕樣式 */
+        .nav-btn {
+            background-color: var(--button-secondary);
+            color: var(--text-color);
+            border: none;
+            border-radius: var(--border-radius-sm);
+            padding: 6px 12px;
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+            font-family: inherit;
+        }
+
+        .nav-btn:hover {
+            background-color: var(--hover-color);
+        }
+
+        .nav-btn.active {
+            background-color: var(--accent-color);
+            color: #333333;
+        }
+
+        /* iframe容器樣式 */
+        .content-container {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 400px;
+            height: calc(100vh - 60px);
+            border: none;
+            overflow: hidden;
+        }
+
+        /* iframe樣式 */
+        .content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: var(--primary-color);
+        }
+
+        /* 載入中樣式 */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            font-size: var(--font-size-md);
+        }
+
+        /* ========== 更新提示樣式 ========== */
+        .update-notification {
+            position: fixed;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-color-dark));
+            color: #333333;
+            padding: 15px;
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-md);
+            z-index: 1200;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .update-notification.show {
+            display: block;
+        }
+
+        .update-title {
+            font-size: var(--font-size-lg);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .update-message {
+            font-size: var(--font-size-sm);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .update-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .update-btn {
+            background: #333333;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+            font-size: var(--font-size-sm);
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+        }
+
+        .update-btn:hover {
+            background: #555555;
+        }
+
+        .update-btn.primary {
+            background: var(--secondary-color);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .update-btn.primary:hover {
+            background: #5a5a5a;
+        }
+
+
+        /* 滑入動畫 */
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -20px);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 固定Header -->
+    <div class="header-container">
+        <h1 class="header-title">小朋友</h1>
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="loadPage('calculator')">計算</button>
+            <button class="nav-btn" onclick="loadPage('check')">支票</button>
+            <button class="nav-btn" onclick="loadPage('invoice')">發票</button>
+            <button class="nav-btn" onclick="loadPage('gas')">加油</button>
+        </div>
+    </div>
+
+    <!-- 更新提示通知 -->
+    <div class="update-notification" id="updateNotification">
+        <div class="update-title">🔄 發現新版本</div>
+        <div class="update-message" id="updateMessage">有新版本可用，是否要立即更新？</div>
+        <div class="update-buttons">
+            <button class="update-btn" onclick="dismissUpdate()">稍後</button>
+            <button class="update-btn primary" onclick="updateApp()">立即更新</button>
+        </div>
+    </div>
+
+    <!-- 內容區域 -->
+    <div class="content-container">
+        <div class="loading" id="loading">載入中...</div>
+        <iframe id="contentFrame" class="content-frame" src="pages/calculator.html" style="display: none;"></iframe>
+    </div>
+
+
+    <script>
+        // 頁面載入功能
+        function loadPage(pageName) {
+            const frame = document.getElementById('contentFrame');
+            const loading = document.getElementById('loading');
+            const buttons = document.querySelectorAll('.nav-btn');
+            
+            // 更新按鈕狀態
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 顯示載入中
+            loading.style.display = 'block';
+            frame.style.display = 'none';
+            
+            // 載入頁面
+            frame.src = `pages/${pageName}.html`;
+            
+            // iframe載入完成後隱藏載入中
+            frame.onload = function() {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+        }
+
+        // 初始載入
+        document.addEventListener('DOMContentLoaded', function() {
+            const frame = document.getElementById('contentFrame');
+            const loading = document.getElementById('loading');
+            
+            frame.onload = function() {
+                loading.style.display = 'none';
+                frame.style.display = 'block';
+            };
+        });
+
+        // PWA安裝提示
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            deferredPrompt = e;
+        });
+
+        // ========== 版本更新管理 ==========
+        let currentVersion = null;
+        let updateAvailable = false;
+        let swRegistration = null;
+
+        // Service Worker註冊和更新管理
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('SW registered: ', registration);
+                        swRegistration = registration;
+                        setupUpdateHandling();
+                        loadVersionInfo();
+                    })
+                    .catch((registrationError) => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // 設定更新處理
+        function setupUpdateHandling() {
+            // 監聽Service Worker訊息
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                const { data } = event;
+                
+                if (data.type === 'UPDATE_AVAILABLE') {
+                    console.log('發現新版本:', data.newVersion);
+                    showUpdateNotification(data.currentVersion, data.newVersion);
+                }
+                
+                if (data.type === 'CACHE_UPDATED') {
+                    console.log('快取已更新:', data.version);
+                    currentVersion = data.version;
+                    hideUpdateNotification();
+                    // 頁面將會重新載入
+                }
+            });
+
+            // 檢測Service Worker更新
+            if (swRegistration) {
+                swRegistration.addEventListener('updatefound', () => {
+                    const newWorker = swRegistration.installing;
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            console.log('檢測到Service Worker更新');
+                            showUpdateNotification(null, null, '檢測到應用程式更新');
+                        }
+                    });
+                });
+            }
+        }
+
+        // 載入版本資訊
+        async function loadVersionInfo() {
+            try {
+                const response = await fetch('/version.json', { 
+                    cache: 'no-cache',
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                if (response.ok) {
+                    currentVersion = await response.json();
+                    console.log('當前版本:', currentVersion.version);
+                }
+            } catch (error) {
+                console.error('無法載入版本資訊:', error);
+            }
+        }
+
+        // 顯示更新通知
+        function showUpdateNotification(oldVersion, newVersion, customMessage = null) {
+            const notification = document.getElementById('updateNotification');
+            const message = document.getElementById('updateMessage');
+            
+            if (customMessage) {
+                message.textContent = customMessage;
+            } else if (newVersion) {
+                message.innerHTML = `
+                    發現新版本 <strong>v${newVersion.version}</strong><br>
+                    <small>${newVersion.description || '包含功能改進和錯誤修復'}</small>
+                `;
+            } else {
+                message.textContent = '有新版本可用，是否要立即更新？';
+            }
+            
+            notification.classList.add('show');
+            updateAvailable = true;
+        }
+
+        // 隱藏更新通知
+        function hideUpdateNotification() {
+            const notification = document.getElementById('updateNotification');
+            notification.classList.remove('show');
+            updateAvailable = false;
+        }
+
+        // 關閉更新提示
+        function dismissUpdate() {
+            hideUpdateNotification();
+            // 10分鐘後再次檢查
+            setTimeout(() => {
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
+                }
+            }, 10 * 60 * 1000);
+        }
+
+        // 執行應用程式更新
+        async function updateApp() {
+            try {
+                console.log('正在更新應用程式...');
+                
+                // 發送強制更新訊息給Service Worker
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'FORCE_UPDATE' });
+                }
+                
+                // 等待一下後重新載入頁面
+                setTimeout(() => {
+                    window.location.reload(true);
+                }, 2000);
+                
+            } catch (error) {
+                console.error('更新失敗:', error);
+                alert('更新失敗，請手動重新整理頁面');
+            }
+        }
+
+
+        // 頁面可見性變化時檢查更新
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && navigator.serviceWorker.controller) {
+                // 頁面重新變為可見時檢查更新
+                setTimeout(() => {
+                    navigator.serviceWorker.controller.postMessage({ type: 'CHECK_UPDATE' });
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
