@@ -10,6 +10,107 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
 
+	<!-- 在每個子頁面（calculator.html, check.html等）的 <head> 區域加入以下代碼 -->
+	<script>
+	    // 子頁面 Google Analytics 追蹤
+	    (function() {
+	        // 向父頁面發送事件
+	        function sendEventToParent(category, action, label = null, value = null) {
+	            if (window.parent !== window) {
+	                window.parent.postMessage({
+	                    type: 'GA_EVENT',
+	                    category: category,
+	                    action: action,
+	                    label: label,
+	                    value: value
+	                }, '*');
+	            }
+	        }
+	
+	        // 追蹤所有按鈕點擊
+	        document.addEventListener('click', function(e) {
+	            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('btn')) {
+	                const buttonText = e.target.textContent || e.target.value || 'unknown';
+	                const pageName = window.location.pathname.split('/').pop().replace('.html', '');
+	                sendEventToParent('Button Click', `${pageName}_button`, buttonText);
+	            }
+	        });
+	
+	        // 追蹤所有輸入框變更
+	        document.addEventListener('change', function(e) {
+	            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+	                const inputName = e.target.name || e.target.id || 'unknown';
+	                const pageName = window.location.pathname.split('/').pop().replace('.html', '');
+	                sendEventToParent('Form Interaction', `${pageName}_input`, inputName);
+	            }
+	        });
+	
+	        // 追蹤表單提交
+	        document.addEventListener('submit', function(e) {
+	            const formName = e.target.name || e.target.id || 'unknown';
+	            const pageName = window.location.pathname.split('/').pop().replace('.html', '');
+	            sendEventToParent('Form Submit', `${pageName}_form`, formName);
+	        });
+	
+	        // 頁面載入完成
+	        window.addEventListener('load', function() {
+	            const pageName = window.location.pathname.split('/').pop().replace('.html', '');
+	            sendEventToParent('Page Load', 'iframe_page_loaded', pageName);
+	        });
+	
+	        // 追蹤捲動深度
+	        let maxScroll = 0;
+	        let scrollTimer;
+	        window.addEventListener('scroll', function() {
+	            const scrollPercentage = Math.round((window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100);
+	            if (scrollPercentage > maxScroll) {
+	                maxScroll = scrollPercentage;
+	                clearTimeout(scrollTimer);
+	                scrollTimer = setTimeout(function() {
+	                    const pageName = window.location.pathname.split('/').pop().replace('.html', '');
+	                    sendEventToParent('Scroll Depth', `${pageName}_scroll`, `${maxScroll}%`, maxScroll);
+	                }, 1000);
+	            }
+	        });
+	
+	        // 特定功能追蹤範例（根據您的實際功能調整）
+	        // 例如：計算器頁面
+	        if (window.location.pathname.includes('calculator')) {
+	            // 追蹤計算操作
+	            window.trackCalculation = function(type, value) {
+	                sendEventToParent('Calculator', 'calculation', type, value);
+	            };
+	        }
+	
+	        // 支票頁面
+	        if (window.location.pathname.includes('check')) {
+	            window.trackCheckOperation = function(operation) {
+	                sendEventToParent('Check Tool', 'operation', operation);
+	            };
+	        }
+	
+	        // 發票頁面
+	        if (window.location.pathname.includes('invoice')) {
+	            window.trackInvoiceOperation = function(operation) {
+	                sendEventToParent('Invoice Tool', 'operation', operation);
+	            };
+	        }
+	
+	        // 加油頁面
+	        if (window.location.pathname.includes('gas')) {
+	            window.trackGasCalculation = function(type, amount) {
+	                sendEventToParent('Gas Calculator', 'calculation', type, amount);
+	            };
+	        }
+	    })();
+	</script>
+	
+	<!-- 使用範例：在您的按鈕或功能中呼叫追蹤函數 -->
+	<!-- 
+	<button onclick="calculate(); trackCalculation('loan', loanAmount);">計算貸款</button>
+	<button onclick="generateCheck(); trackCheckOperation('generate');">產生支票</button>
+	-->
+
     <title>小朋友計算機</title>
 
     <style>
